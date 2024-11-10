@@ -16,6 +16,14 @@ primary_region = 'yyz'
   min_machines_running = 0
   processes = ['app']
 
+[[mounts]]
+  source = "app"
+  destination = "/app"
+
+[[mounts]]
+  source = "downloads"
+  destination = "/downloads"
+
 [[vm]]
   memory = '1gb'
   cpu_kind = 'shared'
