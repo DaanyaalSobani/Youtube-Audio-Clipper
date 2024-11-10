@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Audio Clipper</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Audio Clipper</h1>
+        
+        <div id="download-section">
+            <input type="text" id="url-input" placeholder="Enter audio URL">
+            <button onclick="downloadAudio()">Download</button>
+        </div>
+
+        <div id="editor-section" style="display: none;">
+            <div class="waveform-container">
+                <canvas id="waveform"></canvas>
+                <div id="timeline"></div>
+            </div>
+            
+            <div class="controls">
+                <div class="time-display">
+                    <span>Current Time: <span id="current-time">0:00</span></span>
+                    <span>Duration: <span id="duration">0:00</span></span>
+                </div>
+                
+                <audio id="audio-player" controls></audio>
+                
+                <div class="clip-controls">
+                    <div>
+                        <label>Start Time:</label>
+                        <input type="number" id="start-time" step="0.1" min="0">
+                        <button onclick="setStartTime()">Set Current</button>
+                    </div>
+                    <div>
+                        <label>End Time:</label>
+                        <input type="number" id="end-time" step="0.1" min="0">
+                        <button onclick="setEndTime()">Set Current</button>
+                    </div>
+                    <div>
+                        <label>Loops:</label>
+                        <input type="number" id="loops" value="1" min="1">
+                    </div>
+                </div>
+                
+                <div class="preview-controls">
+                    <button onclick="previewClip()">Preview Clip</button>
+                    <button onclick="stopPreview()">Stop Preview</button>
+                    <button onclick="downloadClip()">Download Clip</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
