@@ -20,10 +20,6 @@ primary_region = 'yyz'
   source = "app"
   destination = "/app"
 
-[[mounts]]
-  source = "downloads"
-  destination = "/downloads"
-
 [[vm]]
   memory = '1gb'
   cpu_kind = 'shared'
