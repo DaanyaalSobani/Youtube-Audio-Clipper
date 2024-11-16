@@ -31,6 +31,7 @@ def download_audio():
         ydl_opts = {
             'format': 'bestaudio/best',
             'outtmpl': os.path.join(DOWNLOAD_DIR, '%(title)s.%(ext)s'),
+            'cookiefile': 'youtube.cookies',
             'overwrites': True,
             'progress_hooks': [progress_hook],
             'postprocessors': [{
