@@ -1,4 +1,5 @@
 # Ignore everything in downloads folder
+*/downloads/*
 downloads/*
 !downloads/.gitkeep
 

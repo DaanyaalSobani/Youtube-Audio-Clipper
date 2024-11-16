@@ -4,191 +4,264 @@ let sourceNode;
 let startTime = 0;
 let endTime = 0;
 let isPlaying = false;
+let audioInitialized = false;
+let animationFrameId;
+let isDrawingPlayhead = false;
+let previewStartTime;
+let currentPreviewTime;
+let lastPreviewUpdateTime;
 
 async function downloadAudio() {
     const url = document.getElementById('url-input').value;
-    const username = document.getElementById('yt-username').value;
-    const password = document.getElementById('yt-password').value;
-    
     const formData = new FormData();
     formData.append('url', url);
-    if (username) formData.append('username', username);
-    if (password) formData.append('password', password);
 
     try {
-        // Show loading state
-        const downloadButton = document.querySelector('button');
-        downloadButton.textContent = 'Downloading...';
-        downloadButton.disabled = true;
-
+        // Show download progress
+        document.getElementById('download-progress').style.display = 'block';
+        
         const response = await fetch('/download', {
             method: 'POST',
             body: formData
         });
-        
         const data = await response.json();
+        
         if (data.error) {
             alert('Error: ' + data.error);
             return;
         }
         
-        // Update audio player with new file
         const audioPlayer = document.getElementById('audio-player');
         audioPlayer.src = `/download/${data.filename}`;
         document.getElementById('editor-section').style.display = 'block';
+        
+        // Add click handler to initialize audio
+        const initializeAudio = async () => {
+            await initAudio(audioPlayer);
+            audioPlayer.removeEventListener('play', initializeAudio);
+        };
+        
+        audioPlayer.addEventListener('play', initializeAudio);
+        
     } catch (error) {
         alert('Error downloading audio: ' + error);
     } finally {
-        // Reset button state
-        const downloadButton = document.querySelector('button');
-        downloadButton.textContent = 'Download';
-        downloadButton.disabled = false;
+        // Hide download progress
+        document.getElementById('download-progress').style.display = 'none';
     }
 }
 
 async function initAudio(audioElement) {
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    
-    const response = await fetch(audioElement.src);
-    const arrayBuffer = await response.arrayBuffer();
-    audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-    
-    // Set initial end time to full duration
-    endTime = audioBuffer.duration;
-    document.getElementById('end-time').value = endTime;
-    document.getElementById('duration').textContent = formatTime(endTime);
-    
-    // Draw waveform
-    drawWaveform();
-    
-    // Update current time display
-    audioElement.addEventListener('timeupdate', () => {
-        document.getElementById('current-time').textContent = 
-            formatTime(audioElement.currentTime);
-    });
-    
-    // Add input event listeners
-    document.getElementById('start-time').addEventListener('input', (e) => {
-        updateStartTime(e.target.value);
-    });
-    
-    document.getElementById('end-time').addEventListener('input', (e) => {
-        updateEndTime(e.target.value);
-    });
-    
-    // Make canvas responsive
-    window.addEventListener('resize', drawWaveform);
+    try {
+        // Create context only if not already created
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        // Resume context if it's suspended
+        if (audioContext.state === 'suspended') {
+            await audioContext.resume();
+        }
+        
+        const response = await fetch(audioElement.src);
+        const arrayBuffer = await response.arrayBuffer();
+        audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        
+        // Set initial end time to full duration
+        endTime = audioBuffer.duration;
+        document.getElementById('end-time').value = endTime;
+        document.getElementById('duration').textContent = formatTime(endTime);
+        
+        // Set canvas dimensions and draw waveform
+        const canvas = document.getElementById('waveform');
+        canvas.width = canvas.parentElement.offsetWidth;
+        canvas.height = 200;
+        
+        audioInitialized = true;
+        
+        // Update current time display and waveform on timeupdate
+        audioElement.addEventListener('timeupdate', () => {
+            const currentTime = audioElement.currentTime;
+            document.getElementById('current-time').textContent = formatTime(currentTime);
+            drawWaveform(currentTime);
+        });
+
+        // Add seeked event to update start/end times when using audio controls
+        audioElement.addEventListener('seeked', () => {
+            const currentTime = audioElement.currentTime;
+            // Update start time if it's before the current end time
+            if (currentTime < endTime) {
+                startTime = currentTime;
+                document.getElementById('start-time').value = currentTime;
+            }
+        });
+        
+        // Initial draw
+        drawWaveform(0);
+        
+    } catch (error) {
+        console.error('Error initializing audio:', error);
+        alert('Error initializing audio: ' + error);
+    }
 }
 
-function drawWaveform() {
+function drawWaveform(currentTime = null) {
+    if (!audioBuffer) return;  // Guard clause if audio isn't loaded
+
     const canvas = document.getElementById('waveform');
     const ctx = canvas.getContext('2d');
-    
-    // Set canvas size to match display size
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
-    
     const width = canvas.width;
     const height = canvas.height;
     
     ctx.clearRect(0, 0, width, height);
     
-    // Draw background
-    ctx.fillStyle = '#f5f5f5';
-    ctx.fillRect(0, 0, width, height);
-    
     // Draw waveform
+    ctx.strokeStyle = '#4CAF50';
+    ctx.lineWidth = 1;
+    
     const data = audioBuffer.getChannelData(0);
     const step = Math.ceil(data.length / width);
     const amp = height / 2;
     
-    // Draw full waveform
     ctx.beginPath();
-    ctx.strokeStyle = '#4CAF50';
-    ctx.lineWidth = 1;
+    ctx.moveTo(0, amp);
     
     for(let i = 0; i < width; i++) {
         let min = 1.0;
         let max = -1.0;
         
         for(let j = 0; j < step; j++) {
-            const datum = data[(i * step) + j];
-            if (datum < min) min = datum;
-            if (datum > max) max = datum;
+            const index = Math.floor((i * step) + j);
+            if (index < data.length) {
+                const datum = data[index];
+                if (datum < min) min = datum;
+                if (datum > max) max = datum;
+            }
         }
         
-        ctx.moveTo(i, (1 + min) * amp);
+        ctx.lineTo(i, (1 + min) * amp);
         ctx.lineTo(i, (1 + max) * amp);
     }
-    ctx.stroke();
     
-    // Draw start and end markers
-    const startX = (startTime / audioBuffer.duration) * width;
-    const endX = (endTime / audioBuffer.duration) * width;
+    ctx.stroke();
+
+    // Draw time markers
+    const startX = Math.floor((startTime / audioBuffer.duration) * width);
+    const endX = Math.floor((endTime / audioBuffer.duration) * width);
+    
+    // Draw selection region with semi-transparent background
+    ctx.fillStyle = 'rgba(200, 200, 255, 0.2)';
+    ctx.fillRect(startX, 0, endX - startX, height);
     
     // Draw start marker
     ctx.beginPath();
-    ctx.strokeStyle = '#FF4444';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(255, 0, 0, 0.8)';
+    ctx.lineWidth = 3;
     ctx.moveTo(startX, 0);
     ctx.lineTo(startX, height);
     ctx.stroke();
     
     // Draw end marker
     ctx.beginPath();
-    ctx.strokeStyle = '#FF4444';
+    ctx.strokeStyle = 'rgba(255, 0, 0, 0.8)';
     ctx.moveTo(endX, 0);
     ctx.lineTo(endX, height);
     ctx.stroke();
     
-    // Highlight selected region
-    ctx.fillStyle = 'rgba(76, 175, 80, 0.2)';
-    ctx.fillRect(startX, 0, endX - startX, height);
+    // Draw playhead
+    if (currentTime !== null) {
+        const playheadX = Math.floor((currentTime / audioBuffer.duration) * width);
+        ctx.beginPath();
+        ctx.strokeStyle = 'rgba(0, 0, 255, 0.8)';
+        ctx.lineWidth = 3;
+        ctx.moveTo(playheadX, 0);
+        ctx.lineTo(playheadX, height);
+        ctx.stroke();
+    }
 }
 
-function previewClip() {
-    if (isPlaying) {
+function updatePlayhead() {
+    if (!isDrawingPlayhead) return;
+    
+    const audioPlayer = document.getElementById('audio-player');
+    drawWaveform(audioPlayer.currentTime);
+    animationFrameId = requestAnimationFrame(updatePlayhead);
+}
+
+async function previewClip() {
+    try {
+        if (audioContext && audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+        
+        if (isPlaying) {
+            stopPreview();
+            return;
+        }
+        
+        if (!audioInitialized) {
+            alert('Please wait for audio to initialize');
+            return;
+        }
+        
+        const loops = parseInt(document.getElementById('loops').value) || 1;
+        startTime = parseFloat(document.getElementById('start-time').value) || 0;
+        endTime = parseFloat(document.getElementById('end-time').value) || audioBuffer.duration;
+        
+        if (startTime >= endTime) {
+            alert('Start time must be less than end time');
+            return;
+        }
+        
+        // Create and start the source
+        sourceNode = audioContext.createBufferSource();
+        sourceNode.buffer = audioBuffer;
+        sourceNode.connect(audioContext.destination);
+        
+        isPlaying = true;
+        previewStartTime = null;  // Will be set in playLoop
+        
+        // Start audio and animation
+        const offset = startTime;
+        const duration = endTime - startTime;
+        sourceNode.start(0, offset, duration);
+        playLoop(loops);
+        
+    } catch (error) {
+        console.error('Error previewing clip:', error);
+        alert('Error previewing clip: ' + error);
+    }
+}
+
+function playLoop(loops) {
+    if (!isPlaying) return;
+    
+    const currentTime = audioContext.currentTime;
+    
+    if (!lastPreviewUpdateTime) {
+        previewStartTime = currentTime;
+        currentPreviewTime = startTime;
+        lastPreviewUpdateTime = currentTime;
+    }
+    
+    // Calculate current position in the clip
+    const elapsedTime = currentTime - previewStartTime;
+    const clipDuration = endTime - startTime;
+    const loopPosition = elapsedTime % clipDuration;
+    currentPreviewTime = startTime + loopPosition;
+    
+    // Update display and waveform
+    document.getElementById('current-time').textContent = formatTime(currentPreviewTime);
+    drawWaveform(currentPreviewTime);
+    
+    // Schedule next frame
+    requestAnimationFrame(() => playLoop(loops));
+    
+    // Check if we've completed all loops
+    const currentLoop = Math.floor(elapsedTime / clipDuration) + 1;
+    if (currentLoop > loops) {
         stopPreview();
         return;
-    }
-    
-    const loops = parseInt(document.getElementById('loops').value);
-    startTime = parseFloat(document.getElementById('start-time').value);
-    endTime = parseFloat(document.getElementById('end-time').value);
-    
-    isPlaying = true;
-    playLoop(loops);
-}
-
-function playLoop(remainingLoops) {
-    if (remainingLoops <= 0 || !isPlaying) {
-        isPlaying = false;
-        return;
-    }
-    
-    sourceNode = audioContext.createBufferSource();
-    sourceNode.buffer = audioBuffer;
-    sourceNode.connect(audioContext.destination);
-    
-    const duration = endTime - startTime;
-    
-    if (startTime < 0 || endTime > audioBuffer.duration || startTime >= endTime) {
-        alert('Invalid start or end time');
-        isPlaying = false;
-        return;
-    }
-    
-    sourceNode.onended = () => {
-        if (isPlaying) {
-            setTimeout(() => playLoop(remainingLoops - 1), 0);
-        }
-    };
-    
-    try {
-        sourceNode.start(0, startTime, duration);
-    } catch (error) {
-        console.error('Error playing audio:', error);
-        isPlaying = false;
     }
 }
 
@@ -198,16 +271,32 @@ function stopPreview() {
         sourceNode.stop();
         sourceNode.disconnect();
     }
+    
+    // Reset preview timing variables
+    previewStartTime = null;
+    currentPreviewTime = null;
+    lastPreviewUpdateTime = null;
+    
+    // Reset display to audio player's current time
+    const audioPlayer = document.getElementById('audio-player');
+    document.getElementById('current-time').textContent = formatTime(audioPlayer.currentTime);
+    drawWaveform(audioPlayer.currentTime);
 }
 
 function setStartTime() {
-    const currentTime = document.getElementById('audio-player').currentTime;
-    updateStartTime(currentTime);
+    const audioPlayer = document.getElementById('audio-player');
+    const currentTime = audioPlayer.currentTime;
+    startTime = currentTime;
+    document.getElementById('start-time').value = currentTime;
+    drawWaveform(currentTime);
 }
 
 function setEndTime() {
-    const currentTime = document.getElementById('audio-player').currentTime;
-    updateEndTime(currentTime);
+    const audioPlayer = document.getElementById('audio-player');
+    const currentTime = audioPlayer.currentTime;
+    endTime = currentTime;
+    document.getElementById('end-time').value = currentTime;
+    drawWaveform(currentTime);
 }
 
 async function downloadClip() {
@@ -303,15 +392,20 @@ function writeString(view, offset, string) {
     }
 }
 
-// Add these functions to handle input changes
-function updateStartTime(value) {
-    startTime = parseFloat(value);
-    document.getElementById('start-time').value = startTime;
-    drawWaveform();
-}
+// Add event listeners for manual input changes
+document.getElementById('start-time').addEventListener('change', function() {
+    const newStartTime = parseFloat(this.value);
+    if (newStartTime >= 0 && newStartTime < endTime) {
+        startTime = newStartTime;
+        const audioPlayer = document.getElementById('audio-player');
+        audioPlayer.currentTime = newStartTime;
+    }
+});
 
-function updateEndTime(value) {
-    endTime = parseFloat(value);
-    document.getElementById('end-time').value = endTime;
-    drawWaveform();
-}
+document.getElementById('end-time').addEventListener('change', function() {
+    const newEndTime = parseFloat(this.value);
+    if (newEndTime > startTime && newEndTime <= audioBuffer.duration) {
+        endTime = newEndTime;
+        drawWaveform(document.getElementById('audio-player').currentTime);
+    }
+});
