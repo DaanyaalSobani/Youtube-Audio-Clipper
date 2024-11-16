@@ -7,13 +7,17 @@ let isPlaying = false;
 
 async function downloadAudio() {
     const url = document.getElementById('url-input').value;
+    const username = document.getElementById('yt-username').value;
+    const password = document.getElementById('yt-password').value;
+    
     const formData = new FormData();
     formData.append('url', url);
+    if (username) formData.append('username', username);
+    if (password) formData.append('password', password);
 
     try {
         // Show loading state
         const downloadButton = document.querySelector('button');
-        const originalText = downloadButton.textContent;
         downloadButton.textContent = 'Downloading...';
         downloadButton.disabled = true;
 
@@ -21,25 +25,23 @@ async function downloadAudio() {
             method: 'POST',
             body: formData
         });
-        const data = await response.json();
         
+        const data = await response.json();
         if (data.error) {
             alert('Error: ' + data.error);
             return;
         }
         
+        // Update audio player with new file
         const audioPlayer = document.getElementById('audio-player');
         audioPlayer.src = `/download/${data.filename}`;
         document.getElementById('editor-section').style.display = 'block';
-        
-        // Initialize Web Audio API
-        await initAudio(audioPlayer);
     } catch (error) {
         alert('Error downloading audio: ' + error);
     } finally {
         // Reset button state
         const downloadButton = document.querySelector('button');
-        downloadButton.textContent = originalText;
+        downloadButton.textContent = 'Download';
         downloadButton.disabled = false;
     }
 }

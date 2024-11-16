@@ -62,3 +62,13 @@ input {
     padding: 5px;
     margin: 5px;
 }
+
+.credentials {
+    margin: 10px 0;
+}
+
+.credentials input {
+    margin: 5px;
+    padding: 8px;
+    width: calc(50% - 20px);
+}

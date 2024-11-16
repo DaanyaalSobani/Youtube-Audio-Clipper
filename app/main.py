@@ -18,6 +18,9 @@ def index():
 @app.route('/download', methods=['POST'])
 def download_audio():
     url = request.form['url']
+    username = request.form.get('username')
+    password = request.form.get('password')
+    
     try:
         def progress_hook(d):
             if d['status'] == 'downloading':
@@ -28,7 +31,7 @@ def download_audio():
         ydl_opts = {
             'format': 'bestaudio/best',
             'outtmpl': os.path.join(DOWNLOAD_DIR, '%(title)s.%(ext)s'),
-            'cookiefile': 'youtube.cookies',
+            'overwrites': True,
             'progress_hooks': [progress_hook],
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
@@ -36,6 +39,13 @@ def download_audio():
             }],
         }
         
+        # Only add credentials if both username and password are provided
+        if username and password:
+            ydl_opts.update({
+                'username': username,
+                'password': password,
+            })
+        print(f"Using credentials: {username} {password}")
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             filename = ydl.prepare_filename(info).rsplit('.', 1)[0] + '.mp3'
