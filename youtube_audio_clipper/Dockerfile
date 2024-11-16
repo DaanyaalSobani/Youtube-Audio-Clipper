@@ -6,7 +6,7 @@ RUN if command -v apt-get >/dev/null 2>&1; then \
     else \
         apk add --no-cache ffmpeg; \
     fi
-COPY requirements.txt youtube.cookies ./
+COPY requirements.txt .
 RUN pip install -r requirements.txt
 RUN mkdir -p /downloads
 COPY app/ ./app/
