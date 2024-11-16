@@ -1,0 +1,20 @@
+name: "YouTube Audio Clipper"
+version: "1.0.0"
+slug: "youtube_audio_clipper"
+description: "Download and clip YouTube audio"
+url: "https://github.com/DaanyaalSobani/Youtube-Audio-Clipper"
+arch:
+  - armhf
+  - armv7
+  - aarch64
+  - amd64
+  - i386
+startup: application
+boot: auto
+ports:
+  8080/tcp: 8080
+ports_description:
+  8080/tcp: "Web interface"
+webui: "http://[HOST]:[PORT:8080]"
+map:
+  - "downloads:rw"
