@@ -17,4 +17,5 @@ ports_description:
   8080/tcp: "Web interface"
 webui: "http://[HOST]:[PORT:8080]"
 map:
-  - "downloads:rw"
+  - share:rw
+  - addon_config:rw
