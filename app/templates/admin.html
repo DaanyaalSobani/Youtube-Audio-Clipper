@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Update YouTube Cookies</title>
+</head>
+<body>
+    <form id="cookieForm">
+        <input type="file" id="cookieFile" accept=".txt">
+        <button type="submit">Update Cookies</button>
+    </form>
+
+    <script>
+        const form = document.getElementById('cookieForm');
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('cookies', document.getElementById('cookieFile').files[0]);
+            
+            try {
+                const response = await fetch('/admin/update-cookies', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer YOUR_ADMIN_TOKEN'
+                    },
+                    body: formData
+                });
+                
+                const result = await response.json();
+                alert(result.message || result.error);
+            } catch (error) {
+                alert('Failed to update cookies: ' + error);
+            }
+        };
+    </script>
+</body>
+</html> 

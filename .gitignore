@@ -1,5 +1,6 @@
 # Ignore everything in downloads folder
 downloads/*
+!downloads/.gitkeep
 
-# Don't ignore the .gitkeep file
-!downloads/.gitkeep 
+# Ignore cookies file
+youtube.cookies

@@ -11,6 +11,12 @@ async function downloadAudio() {
     formData.append('url', url);
 
     try {
+        // Show loading state
+        const downloadButton = document.querySelector('button');
+        const originalText = downloadButton.textContent;
+        downloadButton.textContent = 'Downloading...';
+        downloadButton.disabled = true;
+
         const response = await fetch('/download', {
             method: 'POST',
             body: formData
@@ -30,6 +36,11 @@ async function downloadAudio() {
         await initAudio(audioPlayer);
     } catch (error) {
         alert('Error downloading audio: ' + error);
+    } finally {
+        // Reset button state
+        const downloadButton = document.querySelector('button');
+        downloadButton.textContent = originalText;
+        downloadButton.disabled = false;
     }
 }
 

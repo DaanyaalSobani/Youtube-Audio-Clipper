@@ -1,7 +1,8 @@
 FROM python:3.9-slim
 WORKDIR /app
-COPY app/ .
 RUN apt-get update && apt-get install -y ffmpeg
-COPY requirements.txt .
+COPY requirements.txt youtube.cookies ./
 RUN pip install -r requirements.txt
-CMD ["python", "main.py"]
+RUN mkdir -p /downloads
+COPY app/ ./app/
+CMD ["python", "app/main.py"]
