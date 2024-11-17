@@ -3,6 +3,7 @@ version: "1.0.0"
 slug: "youtube_audio_clipper"
 path: "youtube_audio_clipper"
 description: "Download and clip YouTube audio"
+init: false
 url: "https://github.com/DaanyaalSobani/Youtube-Audio-Clipper"
 arch:
   - armhf
@@ -10,7 +11,7 @@ arch:
   - aarch64
   - amd64
   - i386
-startup: application
+startup: services
 boot: auto
 ports:
   8080/tcp: 8080
@@ -18,3 +19,5 @@ ports_description:
   8080/tcp: "Web interface"
 webui: "http://[HOST]:[PORT:8080]"
 type: application
+ingress: true  # Enable ingress support - allows access through HA interface
+ingress_port: 8080  # The port your app listens on inside the container
