@@ -21,3 +21,5 @@ webui: "http://[HOST]:[PORT:8080]"
 type: application
 ingress: true  # Enable ingress support - allows access through HA interface
 ingress_port: 8080  # The port your app listens on inside the container
+network_mode: host
+host_network: true
