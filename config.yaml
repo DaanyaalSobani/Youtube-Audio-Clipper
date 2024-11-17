@@ -2,6 +2,7 @@ name: "YouTube Audio Clipper"
 version: "1.0.0"
 slug: "youtube_audio_clipper"
 path: "youtube_audio_clipper"
+image: "youtube_audio_clipper_{arch}" 
 description: "Download and clip YouTube audio"
 url: "https://github.com/DaanyaalSobani/Youtube-Audio-Clipper"
 arch:
