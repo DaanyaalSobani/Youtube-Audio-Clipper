@@ -9,7 +9,7 @@ RUN if command -v apt-get >/dev/null 2>&1; then \
         apk add --no-cache python3 py3-pip ffmpeg; \
     fi
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip install -r requirements.txt --break-system-packages
 RUN mkdir -p /downloads
 COPY app/ ./app/
 CMD ["python", "app/main.py"]
