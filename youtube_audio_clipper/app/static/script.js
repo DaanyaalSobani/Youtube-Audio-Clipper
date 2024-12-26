@@ -20,7 +20,7 @@ async function downloadAudio() {
         // Show download progress
         document.getElementById('download-progress').style.display = 'block';
         
-        const response = await fetch('/download', {
+        const response = await fetch('download', {
             method: 'POST',
             body: formData
         });
@@ -32,7 +32,7 @@ async function downloadAudio() {
         }
         
         const audioPlayer = document.getElementById('audio-player');
-        audioPlayer.src = `/download/${data.filename}`;
+        audioPlayer.src = `download/${data.filename}`;
         document.getElementById('editor-section').style.display = 'block';
         
         // Add click handler to initialize audio
