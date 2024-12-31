@@ -251,7 +251,7 @@ function playLoop(loops) {
     currentPreviewTime = startTime + loopPosition;
     
     // Update display and waveform
-    document.getElementById('current-time').textContent = formatTime(currentPreviewTime);
+    document.getElementById('current-time').textContent = currentPreviewTime;
     drawWaveform(currentPreviewTime);
     
     // Schedule next frame
