@@ -1,7 +1,7 @@
-ARG BUILD_FROM
-FROM $BUILD_FROM
-# ARG BUILD_FROM=python:3.9-slim
+# ARG BUILD_FROM
 # FROM $BUILD_FROM
+ARG BUILD_FROM=python:3.9-slim
+FROM $BUILD_FROM
 WORKDIR /app
 RUN if command -v apt-get >/dev/null 2>&1; then \
         apt-get update && apt-get install -y ffmpeg; \
