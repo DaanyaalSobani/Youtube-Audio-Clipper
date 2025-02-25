@@ -11,5 +11,9 @@ RUN if command -v apt-get >/dev/null 2>&1; then \
 COPY requirements.txt .
 RUN pip install -r requirements.txt --break-system-packages
 RUN mkdir -p /downloads
-COPY app/ ./app/
+
+# Development: app directory will be mounted
+# COPY app/ ./app/
+
+# Default command (can be overridden by docker-compose)
 CMD ["python", "app/main.py"]

@@ -17,6 +17,11 @@ async function downloadAudio() {
     formData.append('url', url);
 
     try {
+        // Initialize audio context on user interaction
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
         // Show download progress
         document.getElementById('download-progress').style.display = 'block';
         
@@ -35,13 +40,13 @@ async function downloadAudio() {
         audioPlayer.src = `download/${data.filename}`;
         document.getElementById('editor-section').style.display = 'block';
         
-        // Add click handler to initialize audio
-        const initializeAudio = async () => {
+        // Initialize audio immediately after download
+        try {
             await initAudio(audioPlayer);
-            audioPlayer.removeEventListener('play', initializeAudio);
-        };
-        
-        audioPlayer.addEventListener('play', initializeAudio);
+        } catch (error) {
+            console.error('Error initializing audio:', error);
+            alert('Error initializing audio. Please try playing the audio first.');
+        }
         
     } catch (error) {
         alert('Error downloading audio: ' + error);
@@ -53,13 +58,8 @@ async function downloadAudio() {
 
 async function initAudio(audioElement) {
     try {
-        // Create context only if not already created
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        
         // Resume context if it's suspended
-        if (audioContext.state === 'suspended') {
+        if (audioContext && audioContext.state === 'suspended') {
             await audioContext.resume();
         }
         
@@ -101,7 +101,7 @@ async function initAudio(audioElement) {
         
     } catch (error) {
         console.error('Error initializing audio:', error);
-        alert('Error initializing audio: ' + error);
+        throw error;
     }
 }
 
