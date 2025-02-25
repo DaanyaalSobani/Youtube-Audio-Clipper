@@ -4,19 +4,27 @@
     <title>Audio Clipper</title>
     <!-- <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"> -->
     <link rel="stylesheet" href="static/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <h1>Audio Clipper</h1>
+        <header>
+            <h1>Audio Clipper</h1>
+            <p class="subtitle">Extract and download audio clips from YouTube videos</p>
+        </header>
         
         <div id="download-section">
-            <input type="text" id="url-input" placeholder="Enter YouTube URL"  autocomplete="off" data-lpignore="true">
+            <div class="input-container">
+                <input type="text" id="url-input" placeholder="Enter YouTube URL" autocomplete="off" data-lpignore="true">
+            </div>
             <div class="credentials">
                 <input type="text" id="yt-username" placeholder="YouTube Email (optional)" style="display: none;">
                 <input type="password" id="yt-password" placeholder="YouTube Password (optional)" style="display: none;">
             </div>
-            <button onclick="downloadAudio()">Download</button>
+            <button class="primary-button" onclick="downloadAudio()">Download</button>
             <div id="download-progress" style="display: none;">
+                <div class="loader"></div>
                 <p>Downloading... Please wait</p>
             </div>
         </div>
