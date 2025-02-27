@@ -1,6 +1,9 @@
 services:
   web:
-    build: .
+    build:
+      context: .
+      args:
+        PKG_MANAGER: apt
     ports:
       - "8080:8080"
     volumes:
