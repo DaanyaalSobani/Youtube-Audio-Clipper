@@ -4,15 +4,28 @@ ARG BUILD_FROM=python:3.9-slim
 ARG PKG_MANAGER=apt
 FROM $BUILD_FROM
 WORKDIR /app
-RUN echo $PKG_MANAGER
-RUN echo $BUILD_FROM
+
+# Re-declare ARGs after FROM to make them available
+ARG PKG_MANAGER
+ARG BUILD_FROM
+
+# Debug information properly passing the ARGs to shell
+RUN echo "========== DEBUG INFO =========="
+RUN echo "PKG_MANAGER value: ${PKG_MANAGER}"
+RUN echo "Which command exists:"
+RUN which apt-get || echo "apt-get not found"
+RUN which apk || echo "apk not found"
+RUN echo "==============================="
 # Install ffmpeg based on package manager type
-RUN if [ "$PKG_MANAGER" = "apt" ]; then \
+RUN echo "About to check PKG_MANAGER: ${PKG_MANAGER}" && \
+    if [ "${PKG_MANAGER}" = "apt" ]; then \
+        echo "USING APT PACKAGE MANAGER"; \
         apt-get update && apt-get install -y ffmpeg; \
-    elif [ "$PKG_MANAGER" = "apk" ]; then \
+    elif [ "${PKG_MANAGER}" = "apk" ]; then \
+        echo "USING APK PACKAGE MANAGER"; \
         apk add --no-cache ffmpeg; \
     else \
-        echo "Unsupported package manager: $PKG_MANAGER"; \
+        echo "UNSUPPORTED PACKAGE MANAGER: ${PKG_MANAGER}"; \
         exit 1; \
     fi
 COPY requirements.txt .
