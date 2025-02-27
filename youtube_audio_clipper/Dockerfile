@@ -8,8 +8,11 @@ WORKDIR /app
 # Install ffmpeg based on package manager type
 RUN if [ "$PKG_MANAGER" = "apt" ]; then \
         apt-get update && apt-get install -y ffmpeg; \
-    else \
+    elif [ "$PKG_MANAGER" = "apk" ]; then \
         apk add --no-cache ffmpeg; \
+    else \
+        echo "Unsupported package manager: $PKG_MANAGER"; \
+        exit 1; \
     fi
 COPY requirements.txt .
 RUN pip install -r requirements.txt --break-system-packages
