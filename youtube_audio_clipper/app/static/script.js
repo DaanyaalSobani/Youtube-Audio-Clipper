@@ -251,7 +251,7 @@ function playLoop(loops) {
     currentPreviewTime = startTime + loopPosition;
     
     // Update display and waveform
-    document.getElementById('current-time').textContent = currentPreviewTime;
+    document.getElementById('current-time').textContent = formatTime(currentPreviewTime);
     drawWaveform(currentPreviewTime);
     
     // Schedule next frame
@@ -339,8 +339,10 @@ async function downloadClip() {
 
 function formatTime(seconds) {
     const minutes = Math.floor(seconds / 60);
-    seconds = Math.floor(seconds % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    const remainingSeconds = Math.floor(seconds % 60);
+    const formattedMinSec = `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    const formattedSeconds = seconds.toFixed(2);
+    return `${formattedMinSec} | ${formattedSeconds}s`;
 }
 
 function audioBufferToWav(buffer) {
