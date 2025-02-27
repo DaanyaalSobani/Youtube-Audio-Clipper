@@ -4,7 +4,8 @@ ARG BUILD_FROM=python:3.9-slim
 ARG PKG_MANAGER=apt
 FROM $BUILD_FROM
 WORKDIR /app
-
+RUN echo $PKG_MANAGER
+RUN echo $BUILD_FROM
 # Install ffmpeg based on package manager type
 RUN if [ "$PKG_MANAGER" = "apt" ]; then \
         apt-get update && apt-get install -y ffmpeg; \
