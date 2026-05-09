@@ -5,7 +5,7 @@ services:
       args:
         PKG_MANAGER: apt
     ports:
-      - "8080:8080"
+      - "8081:80"
     volumes:
       - ./downloads:/downloads
       - ./app:/app/app
@@ -13,4 +13,4 @@ services:
       - FLASK_APP=app/main.py
       - FLASK_ENV=development
       - FLASK_DEBUG=0
-    command: flask run --host=0.0.0.0 --port=8080
+    command: flask run --host=0.0.0.0 --port=80
